@@ -10,6 +10,7 @@
 #include "Arch/AArch64.h"
 #include "Arch/ARM.h"
 #include "Arch/CSKY.h"
+#include "Arch/KVX.h"
 #include "Arch/LoongArch.h"
 #include "Arch/M68k.h"
 #include "Arch/Mips.h"
@@ -97,6 +98,7 @@ static bool useFramePointerForTargetByDefault(const llvm::opt::ArgList &Args,
   case llvm::Triple::wasm32:
   case llvm::Triple::wasm64:
   case llvm::Triple::msp430:
+  case llvm::Triple::kvx:
     // XCore never wants frame pointers, regardless of OS.
     // WebAssembly never wants frame pointers.
     return false;
@@ -196,11 +198,11 @@ getFramePointerKind(const llvm::opt::ArgList &Args,
                          clang::driver::options::OPT_fomit_frame_pointer);
   bool NoOmitFP = A && A->getOption().matches(
                            clang::driver::options::OPT_fno_omit_frame_pointer);
-  bool OmitLeafFP =
-      Args.hasFlag(clang::driver::options::OPT_momit_leaf_frame_pointer,
-                   clang::driver::options::OPT_mno_omit_leaf_frame_pointer,
-                   Triple.isAArch64() || Triple.isPS() || Triple.isVE() ||
-                       (Triple.isAndroid() && Triple.isRISCV64()));
+  bool OmitLeafFP = Args.hasFlag(
+      clang::driver::options::OPT_momit_leaf_frame_pointer,
+      clang::driver::options::OPT_mno_omit_leaf_frame_pointer,
+      Triple.isAArch64() || Triple.isPS() || Triple.isVE() ||
+          (Triple.isAndroid() && Triple.isRISCV64()) || Triple.isKVX());
   if (NoOmitFP || mustUseNonLeafFramePointerForTarget(Triple) ||
       (!OmitFP && useFramePointerForTargetByDefault(Args, Triple))) {
     if (OmitLeafFP)
@@ -701,6 +703,9 @@ void tools::getTargetFeatures(const Driver &D, const llvm::Triple &Triple,
     break;
   case llvm::Triple::csky:
     csky::getCSKYTargetFeatures(D, Triple, Args, CmdArgs, Features);
+    break;
+  case llvm::Triple::kvx:
+    KVX::getKVXTargetFeatures(D, Triple, Args, CmdArgs, Features);
     break;
   case llvm::Triple::loongarch32:
   case llvm::Triple::loongarch64:

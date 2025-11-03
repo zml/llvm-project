@@ -107,7 +107,8 @@ public:
     renderscript32, // 32-bit RenderScript
     renderscript64, // 64-bit RenderScript
     ve,             // NEC SX-Aurora Vector Engine
-    LastArchType = ve
+    kvx,            // Kalray MPPA-3
+    LastArchType = kvx
   };
   enum SubArchType {
     NoSubArch,
@@ -157,6 +158,11 @@ public:
 
     PPCSubArch_spe,
 
+    // KVX sub-archs.
+    KVXSubArch_kv4v1,
+    KVXSubArch_kv3v2,
+    KVXSubArch_kv3v1,
+  
     // SPIR-V sub-arch corresponds to its version.
     SPIRVSubArch_v10,
     SPIRVSubArch_v11,
@@ -182,7 +188,8 @@ public:
     Mesa,
     SUSE,
     OpenEmbedded,
-    LastVendorType = OpenEmbedded
+    Kalray,
+    LastVendorType = Kalray
   };
   enum OSType {
     UnknownOS,
@@ -222,6 +229,8 @@ public:
     Hurd,       // GNU/Hurd
     WASI,       // Experimental WebAssembly OS
     Emscripten,
+    ClusterOS,  // Kalray ClusterOS
+    KVXOSPorting, // Kalray OSPorting
     ShaderModel, // DirectX ShaderModel
     LiteOS,
     Serenity,
@@ -548,6 +557,12 @@ public:
                                            isMacCatalystEnvironment()));
   }
 
+  bool isOSClusterOS() const {
+    return getOS() == Triple::ClusterOS;
+  }
+
+  bool isOSKVXOSPorting() const { return getOS() == Triple::KVXOSPorting; }
+
   bool isOSNetBSD() const {
     return getOS() == Triple::NetBSD;
   }
@@ -822,6 +837,8 @@ public:
   bool isAMDGPU() const {
     return getArch() == Triple::r600 || getArch() == Triple::amdgcn;
   }
+
+  bool isKVX() const { return getArch() == Triple::kvx; }
 
   /// Tests whether the target is Thumb (little and big endian).
   bool isThumb() const {

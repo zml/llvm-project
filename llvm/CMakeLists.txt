@@ -464,6 +464,7 @@ set(LLVM_ALL_TARGETS
   Sparc
   SystemZ
   VE
+  KVX
   WebAssembly
   X86
   XCore

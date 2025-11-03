@@ -14007,6 +14007,7 @@ private:
   bool BuiltinWasmTableGrow(CallExpr *TheCall);
   bool BuiltinWasmTableFill(CallExpr *TheCall);
   bool BuiltinWasmTableCopy(CallExpr *TheCall);
+  bool CheckKVXTCAType(QualType Type, SourceLocation TypeLoc);
 
 public:
   enum FormatStringType {

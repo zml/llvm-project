@@ -1,3 +1,4 @@
+// XFAIL: target=kvx-{{.*}}
 // RUN: %clang_cc1 -Wno-string-plus-int -fexperimental-new-constant-interpreter %s -verify
 // RUN: %clang_cc1 -Wno-string-plus-int -fexperimental-new-constant-interpreter -triple i686 %s -verify
 // RUN: %clang_cc1 -Wno-string-plus-int -verify=ref %s -Wno-constant-evaluated

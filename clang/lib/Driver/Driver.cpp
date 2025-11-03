@@ -15,6 +15,7 @@
 #include "ToolChains/BareMetal.h"
 #include "ToolChains/CSKYToolChain.h"
 #include "ToolChains/Clang.h"
+#include "ToolChains/ClusterOS.h"
 #include "ToolChains/CrossWindows.h"
 #include "ToolChains/Cuda.h"
 #include "ToolChains/Darwin.h"
@@ -28,6 +29,7 @@
 #include "ToolChains/Haiku.h"
 #include "ToolChains/Hexagon.h"
 #include "ToolChains/Hurd.h"
+#include "ToolChains/KVXOSPorting.h"
 #include "ToolChains/Lanai.h"
 #include "ToolChains/Linux.h"
 #include "ToolChains/MSP430.h"
@@ -573,6 +575,31 @@ static llvm::Triple computeTargetTriple(const Driver &D,
       if (AT != llvm::Triple::UnknownArch && AT != Target.getArch())
         Target.setArch(AT);
     }
+  }
+
+  // OSporting and ClusterOS are kvx exclusive.
+  if (Target.isOSClusterOS() || Target.isOSKVXOSPorting())
+    Target.setArch(llvm::Triple::kvx);
+
+  if (Target.isKVX()) {
+    // We don't support baremetal yet, default to ClusterOS.
+    // See that default kvx target is ClusterOS. If it
+    // arrives here means the user has explicitly set
+    // --target but did not set the OS.
+    if (Target.getOS() == llvm::Triple::UnknownOS)
+      Target.setOS(llvm::Triple::ClusterOS);
+
+    StringRef March = "kv3-v1";
+    if (Arg *A = Args.getLastArg(options::OPT_march_EQ))
+      March = A->getValue();
+
+    llvm::Triple::SubArchType SA =
+    llvm::StringSwitch<llvm::Triple::SubArchType>(March)
+      .Case("kv3-2", llvm::Triple::KVXSubArch_kv3v2)
+      .Case("kv4-1", llvm::Triple::KVXSubArch_kv4v1)
+      .Default(llvm::Triple::KVXSubArch_kv3v1);
+    Target.setVendor(llvm::Triple::Kalray);
+    Target.setArch(llvm::Triple::kvx, SA);
   }
 
   // The `-maix[32|64]` flags are only valid for AIX targets.
@@ -6221,6 +6248,12 @@ const ToolChain &Driver::getToolChain(const ArgList &Args,
       break;
     case llvm::Triple::Haiku:
       TC = std::make_unique<toolchains::Haiku>(*this, Target, Args);
+      break;
+    case llvm::Triple::ClusterOS:
+      TC = std::make_unique<toolchains::ClusterOS>(*this, Target, Args);
+      break;
+    case llvm::Triple::KVXOSPorting:
+      TC = std::make_unique<toolchains::KVXOSPorting>(*this, Target, Args);
       break;
     case llvm::Triple::Darwin:
     case llvm::Triple::MacOSX:

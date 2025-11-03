@@ -1,8 +1,16 @@
 {
+<<<<<<< HEAD
   "phabricator.uri" : "https://reviews.llvm.org/",
   "repository.callsign" : "G",
   "conduit_uri" : "https://reviews.llvm.org/",
   "base": "git:HEAD^",
   "arc.land.onto.default": "main",
   "arc.land.onto": ["main"]
+=======
+    "repository.callsign": "LLVMPROJECT",
+    "phabricator.codereview": "true",
+    "load": [
+        "clang-format-linter"
+    ]
+>>>>>>> 51a981e6714e (WIP)
 }

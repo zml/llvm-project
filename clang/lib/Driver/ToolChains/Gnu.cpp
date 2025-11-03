@@ -1938,6 +1938,32 @@ static void findRISCVMultilibs(const Driver &D,
     Result.Multilibs = RISCVMultilibs;
 }
 
+static void findKVXMultilibs(const Driver &D, const llvm::Triple &TargetTriple,
+                             StringRef Path, const ArgList &Args,
+                             DetectedMultilibs &Result) {
+  assert(TargetTriple.getOS() == llvm::Triple::ClusterOS);
+
+  MultilibBuilder KV31 = MultilibBuilder("").flag("+march=kv3-1");
+  MultilibBuilder KV32 = MultilibBuilder("kv3-2").flag("+march=kv3-2");
+  MultilibBuilder KV41 = MultilibBuilder("kv4-1").flag("+march=kv4-1");
+  FilterNonExistent NonExistent(Path, "/crtbegin.o", D.getVFS());
+  MultilibSet KVXMultilibs = MultilibSetBuilder().Either({KV31, KV32, KV41}).makeMultilibSet()
+          .FilterOut(NonExistent);
+
+  Multilib::flags_list Flags;
+
+  const Arg *A = Args.getLastArg(clang::driver::options::OPT_march_EQ);
+  addMultilibFlag(!A || std::string(A->getValue()) == "kv3-1", "march=kv3-1",
+                  Flags);
+  addMultilibFlag(A && std::string(A->getValue()) == "kv3-2", "march=kv3-2",
+                  Flags);
+  addMultilibFlag(A && std::string(A->getValue()) == "kv4-1", "march=kv4-1",
+                  Flags);
+
+  if (KVXMultilibs.select(Flags, Result.SelectedMultilibs))
+    Result.Multilibs = KVXMultilibs;
+}
+
 static bool findBiarchMultilibs(const Driver &D,
                                 const llvm::Triple &TargetTriple,
                                 StringRef Path, const ArgList &Args,
@@ -2572,6 +2598,8 @@ void Generic_GCC::GCCInstallationDetector::AddDefaultGCCPrefixes(
       "s390x-linux-gnu", "s390x-unknown-linux-gnu", "s390x-ibm-linux-gnu",
       "s390x-suse-linux", "s390x-redhat-linux"};
 
+  static const char *const KVXLibDirs[] = {"/lib"};
+  static const char *const KVXTriples[] = {"kvx-kalray-cos"};
 
   using std::begin;
   using std::end;
@@ -2844,6 +2872,10 @@ void Generic_GCC::GCCInstallationDetector::AddDefaultGCCPrefixes(
     LibDirs.append(begin(SystemZLibDirs), end(SystemZLibDirs));
     TripleAliases.append(begin(SystemZTriples), end(SystemZTriples));
     break;
+  case llvm::Triple::kvx:
+    LibDirs.append(begin(KVXLibDirs), end(KVXLibDirs));
+    TripleAliases.append(begin(KVXTriples), end(KVXTriples));
+    break;
   default:
     // By default, just rely on the standard lib directories and the original
     // triple.
@@ -2878,6 +2910,8 @@ bool Generic_GCC::GCCInstallationDetector::ScanGCCForMultilibs(
     findMSP430Multilibs(D, TargetTriple, Path, Args, Detected);
   } else if (TargetArch == llvm::Triple::avr) {
     // AVR has no multilibs.
+  } else if (TargetTriple.isKVX()) {
+    findKVXMultilibs(D, TargetTriple, Path, Args, Detected);
   } else if (!findBiarchMultilibs(D, TargetTriple, Path, Args,
                                   NeedsBiarchSuffix, Detected)) {
     return false;

@@ -450,6 +450,10 @@ bool SjLjEHPrepareImpl::setupEntryBlockAndCallSites(Function &F) {
     CallInst::Create(CallSiteFn, CallSiteNum, "", Invokes[I]);
   }
 
+  // Set of invokes that are not skipped.
+  SmallSetVector<const Instruction *, 8> InvokesSet;
+  for (auto &I : Invokes)
+    InvokesSet.insert(I);
   // Mark call instructions that aren't nounwind as no-action (call_site ==
   // -1). Skip the entry block, as prior to then, no function context has been
   // created for this function and any unexpected exceptions thrown will go
@@ -459,7 +463,7 @@ bool SjLjEHPrepareImpl::setupEntryBlockAndCallSites(Function &F) {
     if (&BB == &F.front())
       continue;
     for (Instruction &I : BB)
-      if (I.mayThrow())
+      if (I.mayThrow() && !InvokesSet.count(&I))
         insertCallSiteStore(&I, -1);
   }
 

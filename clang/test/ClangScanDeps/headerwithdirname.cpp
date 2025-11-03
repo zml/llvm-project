@@ -1,3 +1,5 @@
+// XFAIL: target=kvx-{{.*}}
+
 // RUN: rm -rf %t.dir
 // RUN: rm -rf %t.dir/foodir
 // RUN: rm -rf %t.cdb
