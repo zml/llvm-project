@@ -154,7 +154,7 @@ KVXTargetMachine::KVXTargetMachine(const Target &T, const Triple &TT,
   Options.EnableGlobalISel = false;
   Options.EnableCFIFixup = true;
   Options.EnableDebugEntryValues = true;
-  Options.MCOptions.CompressDebugSections = DebugCompressionType::None;
+  // Options.MCOptions.CompressDebugSections = DebugCompressionType::None;
   Options.DebuggerTuning = DebuggerKind::GDB;
   setSupportsDebugEntryValues(true);
   initAsmInfo();
@@ -238,7 +238,7 @@ KVXPassConfig::createPostMachineScheduler(MachineSchedContext *C) const {
 }
 
 void KVXPassConfig::addIRPasses() {
-  addPass(createAtomicExpandLegacyPass());
+  addPass(createAtomicExpandPass());
   if (getOptLevel() >= CodeGenOptLevel::Less) {
     addPass(createDeadCodeEliminationPass());
     if (getOptLevel() >= CodeGenOptLevel::Default) {
@@ -318,7 +318,7 @@ bool KVXTargetMachine::isNoopAddrSpaceCast(unsigned SrcAS,
 MachineFunctionInfo *KVXTargetMachine::createMachineFunctionInfo(
     BumpPtrAllocator &Allocator, const Function &F,
     const TargetSubtargetInfo *STI) const {
-      
+
   return KVXMachineFunctionInfo::create<KVXMachineFunctionInfo, KVXSubtarget>(
       Allocator, F, static_cast<const KVXSubtarget *>(STI));
 }

@@ -132,7 +132,7 @@ public:
 
   bool getMemOperandsWithOffsetWidth(
       const MachineInstr &MI, SmallVectorImpl<const MachineOperand *> &BaseOps,
-      int64_t &Offset, bool &OffsetIsScalable, LocationSize &Width,
+      int64_t &Offset, bool &OffsetIsScalable, unsigned &Width,
       const TargetRegisterInfo *TRI) const override;
 
   bool areMemAccessesTriviallyDisjoint(const MachineInstr &MIa,
