@@ -406,6 +406,41 @@ inline static StringRef getMVTName(const MVT &T) {
 }
 #endif
 
+static void CC_KVX_PromoteIntToABICarrier(unsigned ValNo, MVT ValVT,
+                                            MVT &LocVT,
+                                            CCValAssign::LocInfo &LocInfo,
+                                            ISD::ArgFlagsTy ArgFlags) {
+  if (!ValVT.isInteger())
+    return;
+
+  const unsigned BW = ValVT.getSizeInBits();
+  if (BW == 8 || BW == 16 || BW == 32 || BW == 64)
+    return;
+
+  // Pick an ABI carrier for non-standard integer sizes (i2/i3/i5/i12/...)
+  if (BW <= 32)
+    LocVT = MVT::i32;
+  else if (BW <= 64)
+    LocVT = MVT::i64;
+  else
+    return;
+
+  // // Make sure the calling-convention assignment actually uses the carrier type.
+  // // The TableGen CC only explicitly promotes i1/i2/i4; for all other "odd" ints
+  // // we force the effective argument type to the carrier (LocVT) so CC_KVX will
+  // // match and assign locations consistently.
+  // ValVT = LocVT;
+
+  // // Preserve frontend intent if signext/zeroext is present; otherwise fall back
+  // // to anyext semantics for the promotion carrier.
+  if (ArgFlags.isSExt())
+    LocInfo = CCValAssign::SExt;
+  else if (ArgFlags.isZExt())
+    LocInfo = CCValAssign::ZExt;
+  else
+    LocInfo = CCValAssign::AExt;
+}
+
 static bool CC_SRET_KVX(unsigned ValNo, MVT ValVT, MVT LocVT,
                         CCValAssign::LocInfo LocInfo, ISD::ArgFlagsTy ArgFlags,
                         CCState &State) {
@@ -417,7 +452,19 @@ static bool CC_SRET_KVX(unsigned ValNo, MVT ValVT, MVT LocVT,
     return true;
   }
 
-  return CC_KVX(ValNo, ValVT, LocVT, LocInfo, ArgFlags, State);
+  CC_KVX_PromoteIntToABICarrier(ValNo, ValVT, LocVT, LocInfo, ArgFlags);
+  return CC_KVX(ValNo, (LocVT != ValVT) ? LocVT : ValVT, LocVT, LocInfo, ArgFlags,
+                State);
+}
+
+static bool RetCC_KVX_Promoted(unsigned ValNo, MVT ValVT,
+                                               MVT LocVT,
+                                               CCValAssign::LocInfo LocInfo,
+                                               ISD::ArgFlagsTy ArgFlags,
+                                               CCState &State) {
+  CC_KVX_PromoteIntToABICarrier(ValNo, ValVT, LocVT, LocInfo, ArgFlags);
+  return RetCC_KVX(ValNo, (LocVT != ValVT) ? LocVT : ValVT, LocVT, LocInfo,
+                   ArgFlags, State);
 }
 
 KVXTargetLowering::KVXTargetLowering(const TargetMachine &TM,
@@ -1224,7 +1271,7 @@ bool KVXTargetLowering::CanLowerReturn(
     const Type * /*RetTy*/) const {
   SmallVector<CCValAssign, 16> RVLocs;
   CCState CCInfo(CallConv, IsVarArg, MF, RVLocs, Context);
-  return CCInfo.CheckReturn(Outs, RetCC_KVX);
+  return CCInfo.CheckReturn(Outs, RetCC_KVX_Promoted);
 }
 
 SDValue
@@ -1239,7 +1286,7 @@ KVXTargetLowering::LowerReturn(SDValue Chain, CallingConv::ID CallConv,
   CCState CCInfo(CallConv, IsVarArg, DAG.getMachineFunction(), RVLocs,
                  *DAG.getContext());
 
-  CCInfo.AnalyzeReturn(Outs, RetCC_KVX);
+  CCInfo.AnalyzeReturn(Outs, RetCC_KVX_Promoted);
 
   SDValue Flag;
   SmallVector<SDValue, 4> RetOps(1, Chain);
@@ -1340,10 +1387,6 @@ SDValue KVXTargetLowering::LowerFormalArguments(
     unsigned Offset = VA.getLocMemOffset();
     unsigned StoreSize = VA.getValVT().getStoreSize();
     int FI = MFI.CreateFixedObject(StoreSize, Offset, false);
-    InVals.push_back(
-        DAG.getLoad(VA.getValVT(), DL, Chain,
-                    DAG.getFrameIndex(FI, getPointerTy(MF.getDataLayout())),
-                    MachinePointerInfo::getFixedStack(MF, FI)));
 
   }
 
