@@ -1129,7 +1129,7 @@ MVT KVXTargetLowering::getRegisterTypeForCallingConv(LLVMContext &Context,
     return MVT::i64;
   }
   const auto SVT = VT.getSimpleVT();
-  if (SVT == MVT::i1 || SVT == MVT::i8 || SVT == MVT::i16) {
+  if (SVT.getSizeInBits() <= 32) {
     LLVM_DEBUG(dbgs() << "CC: MVT::i1/i8/i16 are passed as a MVT::i32.\n");
     return MVT::i32;
   }
@@ -1563,7 +1563,7 @@ SDValue KVXTargetLowering::LowerCall(CallLoweringInfo &CLI,
   // Assign locations to each value returned by this call.
   SmallVector<CCValAssign, 16> RVLocs;
   CCState RetCCInfo(CallConv, CLI.IsVarArg, MF, RVLocs, *DAG.getContext());
-  RetCCInfo.AnalyzeCallResult(Ins, RetCC_KVX);
+  RetCCInfo.AnalyzeCallResult(Ins, RetCC_KVX_Promoted);
   // analyzeInputArgs(MF, RetCCInfo, Ins, /*IsRet=*/true);
 
   // Copy all of the result registers out of their specified physreg.
