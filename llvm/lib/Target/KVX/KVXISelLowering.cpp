@@ -802,6 +802,7 @@ KVXTargetLowering::KVXTargetLowering(const TargetMachine &TM,
   setOperationAction(ISD::FP_ROUND, MVT::v2f32, Legal);
   setOperationAction(ISD::FP_ROUND, MVT::v4f32, Legal);
 
+  setTruncStoreAction(MVT::v8i8, MVT::v8i1, Expand);
   setTruncStoreAction(MVT::v2i16, MVT::v2i8, Expand);
   setTruncStoreAction(MVT::v2i64, MVT::v2i8, Expand);
   setTruncStoreAction(MVT::v2i64, MVT::v2i16, Expand);

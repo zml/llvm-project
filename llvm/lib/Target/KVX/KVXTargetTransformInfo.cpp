@@ -772,7 +772,7 @@ InstructionCost KVXTTIImpl::getScalarizationOverhead(
   uint64_t RegWidth =
       getRegisterBitWidth(TargetTransformInfo::RGK_Scalar).getFixedValue();
 
-  if (ScalarSize == 1)
+  if (ScalarSize <= 1)
     return InstructionCost::getInvalid(0xDEAD);
 
   // Scalarization elements that takes entire registers are free
@@ -781,12 +781,19 @@ InstructionCost KVXTTIImpl::getScalarizationOverhead(
 
   // Elements in 64-bit borders are free
   APInt RequiredAnyOps = DemandedElts;
+  // Calculate how many elements fit in one register (The Step)
+  // e.g. For i8 (8 bits) in 64-bit Reg: 64 / 8 = 8.
+  unsigned Step = RegWidth / ScalarSize;
 
-  APInt NotRequired(DemandedElts.getBitWidth(), 1);
-  unsigned Sht = 6 - Log2_32(Ty->getScalarSizeInBits());
-  while (NotRequired.getActiveBits() && NotRequired.uge(DemandedElts)) {
-    RequiredAnyOps &= ~NotRequired;
-    NotRequired <<= Sht;
+  // Sanity check to avoid infinite loops if Step is 0 (though ScalarSize >= RegWidth check prevents this)
+  if (Step == 0) Step = 1;
+
+  // Iterate through the bitmask and clear the bit at every register boundary
+  for (unsigned i = 0; i < DemandedElts.getBitWidth(); i += Step) {
+    // We can simply clear the bit. If the vector is small (e.g. <2 x i8>),
+    // i might exceed the number of lanes, but APInt::clearBit handles out-of-bounds safely
+    // (or we can add "if (i < DemandedElts.getBitWidth())").
+    RequiredAnyOps.clearBit(i);
   }
 
   unsigned RequireAnyOpsCount = RequiredAnyOps.popcount();
