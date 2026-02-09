@@ -582,16 +582,17 @@ class KVXProcResource<SchedMachineModel m, int num> : ProcResource<num> {
 }
 
 // Custom class to specify that we have a fully pipelined model.
-class KVXWriteRes<SchedMachineModel model, SchedWrite write, list<ProcResource> resources>
+class KVXWriteRes<SchedMachineModel model, SchedWrite write, list<ProcResource> resources, int latency=1>
   : WriteRes<write, resources> {
+  let Latency = latency;
   let SchedModel = model;
 }
 
 multiclass KVXItinWriteRes <SchedMachineModel model, InstrItinClass itinClass,
                             list<ProcResource> resources, int issueWidth,
-                            SchedWrite srw> {
+                            int latency=1, SchedWrite srw> {
   let NumMicroOps = issueWidth in
-    def _WR: KVXWriteRes<model, srw, resources>;
+    def _WR: KVXWriteRes<model, srw, resources, latency>;
   let SchedModel = model in
     def _IRW: ItinRW<[srw], [itinClass]>;
 }
@@ -617,39 +618,38 @@ defm CRWL_PR: KVXProcResourceDef;
 defm CRWH_PR: KVXProcResourceDef;
 defm NOP_PR: KVXProcResourceDef<4>;
 
-multiclass KVXItinWriteResDefBase<bit isCV1, list<KVXProcResource> rt, int issueCount, list<KVXProcResource> rt2> {
+multiclass KVXItinWriteResDefBase<bit isCV1, list<KVXProcResource> rt, int issueCount, int latency=1, list<KVXProcResource> rt2> {
   defvar itinClass = !cast<InstrItinClass>(NAME);
   defvar schedWrite = !cast<SchedWrite>(NAME # _SRW);
   defvar nameWithCV = NAME # _ # !cond(isCV1: "CV1", 1: "CV2");
   defvar schedModel = !cond(isCV1: KVXCV1SchedMachineModel, 1: KVXCV2SchedMachineModel);
   defvar rt_cv2 = !cond(!size(rt2): rt2, 1: rt);
   defvar rt_cv = !cond(isCV1: rt, 1: rt_cv2);
-  defm nameWithCV: KVXItinWriteRes<schedModel, itinClass, rt_cv, issueCount, schedWrite>;
+  defm nameWithCV: KVXItinWriteRes<schedModel, itinClass, rt_cv, issueCount, latency, schedWrite>;
 }
 
 defvar NO_VARIANT = [""];
 
-multiclass KVXItinWriteResDef<bit isCV1, list<KVXProcResource> rt, bit hasXY=0, int issueCount=1, list<string> variants = NO_VARIANT, list<KVXProcResource> rt2>{
+multiclass KVXItinWriteResDef<bit isCV1, list<KVXProcResource> rt, bit hasXY=0, int issueCount=1, list<string> variants = NO_VARIANT, int latency=1, list<KVXProcResource> rt2>{
   if !and(!ne(issueCount, 1), hasXY) then {
     def : KVX_Error<"XY instruction with base issue count != 1 not supported">;
   }
 
   foreach variant = variants in {
     defvar fullName = !cond(!eq(variant, ""): NAME, true: NAME#_#variant);
-    defm fullName: KVXItinWriteResDefBase<isCV1, rt, issueCount, rt2>;
+    defm fullName: KVXItinWriteResDefBase<isCV1, rt, issueCount, latency, rt2>;
     if hasXY then {
-      defm fullName # _X_: KVXItinWriteResDefBase<isCV1, rt, 2, rt2>;
-      defm fullName # _Y_: KVXItinWriteResDefBase<isCV1, rt, 3, rt2>;
+      defm fullName # _X_: KVXItinWriteResDefBase<isCV1, rt, 2, latency, rt2>;
+      defm fullName # _Y_: KVXItinWriteResDefBase<isCV1, rt, 3, latency, rt2>;
     }
   }
 }
-
-multiclass KVXItinWriteResXY<bit isCV1, list<KVXProcResource> rt, list<string> variants=[""], list<KVXProcResource> rt2=[]> {
-  defm "": KVXItinWriteResDef<isCV1, rt, /*hasXY*/ 1, /*issueCount*/ 1, variants, rt2>;
+multiclass KVXItinWriteResXY<bit isCV1, list<KVXProcResource> rt, list<string> variants=[""], int latency=1, list<KVXProcResource> rt2=[]> {
+  defm "": KVXItinWriteResDef<isCV1, rt, /*hasXY*/ 1, /*issueCount*/ 1, variants, latency, rt2>;
 }
 
-multiclass KVXItinWriteResSingle<bit isCV1, list<KVXProcResource> rt, int issueCount=1, list<string> variants=[""], list<KVXProcResource> rt2=[]> {
-  defm "": KVXItinWriteResDef<isCV1, rt, /*hasXY*/ 0, issueCount, variants, rt2>;
+multiclass KVXItinWriteResSingle<bit isCV1, list<KVXProcResource> rt, int issueCount=1, list<string> variants=[""], int latency=1, list<KVXProcResource> rt2=[]> {
+  defm "": KVXItinWriteResDef<isCV1, rt, /*hasXY*/ 0, issueCount, variants, latency, rt2>;
 }
 
 foreach m = [KVXCV1SchedMachineModel, KVXCV2SchedMachineModel] in {
@@ -764,7 +764,7 @@ foreach m = [KVXCV1SchedMachineModel, KVXCV2SchedMachineModel] in {
   defm BCU_TINY_AUXW_CRRP: KVXItinWriteResSingle<IS_CV1, BCU_TINY_AUXW_CRRP_RT, 1, BCU_TINY_AUXW_CRRP_VL.l>;
   defm BCU_TINY_TINY_MAU_XNOP: KVXItinWriteResSingle<IS_CV1, BCU_TINY_TINY_MAU_XNOP_RT, 1, BCU_TINY_TINY_MAU_XNOP_VL.l>;
 
-  defm TCA: KVXItinWriteResSingle<IS_CV1, TCA_RT, 1, TCA_VL.l>;
+  defm TCA: KVXItinWriteResSingle<IS_CV1, TCA_RT, 1, TCA_VL.l, 4>;
 
   defm LSU: KVXItinWriteResXY<IS_CV1, LSU_RT, LSU_VL.l>;
   defm LSU_CRRP: KVXItinWriteResXY<IS_CV1, LSU_CRRP_RT, LSU_CRRP_VL.l>;
@@ -784,6 +784,6 @@ foreach m = [KVXCV1SchedMachineModel, KVXCV2SchedMachineModel] in {
 
   // === Mappings for the CV1/CV2 switch itinerary classes ===
 
-  defm ALU_SWITCH_LITE_TINY: KVXItinWriteResXY<IS_CV1, ALU_LITE_RT, NO_VARIANT, ALU_TINY_RT>;
-  defm MAU_SWITCH_AUXR_EMPTY: KVXItinWriteResXY<IS_CV1, MAU_AUXR_RT, MAU_SWITCH_AUXR_EMPTY_VL.l, MAU_RT>;
+  defm ALU_SWITCH_LITE_TINY: KVXItinWriteResXY<IS_CV1, ALU_LITE_RT, NO_VARIANT, 1, ALU_TINY_RT>;
+  defm MAU_SWITCH_AUXR_EMPTY: KVXItinWriteResXY<IS_CV1, MAU_AUXR_RT, MAU_SWITCH_AUXR_EMPTY_VL.l, 1, MAU_RT>;
 }
