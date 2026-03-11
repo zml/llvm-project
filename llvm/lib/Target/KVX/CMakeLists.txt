@@ -22,6 +22,7 @@ add_llvm_target(KVXCodeGen
     KVXGenerated.cpp
     KVXHardwareLoops.cpp
     KVXHardwareLoopsPrepare.cpp
+    KVXInstPrinter.cpp
     KVXInstrInfo.cpp
     KVXISelDAGToDAG.cpp
     KVXISelLowering.cpp

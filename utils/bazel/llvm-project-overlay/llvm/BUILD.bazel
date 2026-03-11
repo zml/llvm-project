@@ -858,6 +858,10 @@ llvm_target_intrinsics_list = [
         "intrinsic_prefix": "loongarch",
     },
     {
+        "name": "KVX",
+        "intrinsic_prefix": "kvx",
+    },
+    {
         "name": "Mips",
         "intrinsic_prefix": "mips",
     },
@@ -1405,6 +1409,13 @@ td_library(
     name = "RISCVTargetTdFiles",
     srcs = glob([
         "lib/Target/RISCV/**/*.td",
+    ]),
+)
+
+td_library(
+    name = "KVXTargetTdFiles",
+    srcs = glob([
+        "lib/Target/KVX/**/*.td",
     ]),
 )
 
@@ -2683,6 +2694,48 @@ llvm_target_lib_list = [lib for lib in [
             (
                 ["-gen-subtarget"],
                 "lib/Target/LoongArch/LoongArchGenSubtargetInfo.inc",
+            ),
+        ],
+    },
+    {
+        "name": "KVX",
+        "short_name": "KVX",
+        "tbl_outs": [
+            (
+                ["-gen-asm-matcher"],
+                "lib/Target/KVX/KVXGenAsmMatcher.inc",
+            ),
+            (
+                ["-gen-asm-writer"],
+                "lib/Target/KVX/KVXGenAsmWriter.inc",
+            ),
+            (
+                ["-gen-callingconv"],
+                "lib/Target/KVX/KVXGenCallingConv.inc",
+            ),
+            (
+                ["-gen-dag-isel"],
+                "lib/Target/KVX/KVXGenDAGISel.inc",
+            ),
+            (
+                ["-gen-dfa-packetizer"],
+                "lib/Target/KVX/KVXGenDFAPacketizer.inc",
+            ),
+            (
+                ["-gen-instr-info"],
+                "lib/Target/KVX/KVXGenInstrInfo.inc",
+            ),
+            (
+                ["-gen-pseudo-lowering"],
+                "lib/Target/KVX/KVXGenMCPseudoLowering.inc",
+            ),
+            (
+                ["-gen-register-info"],
+                "lib/Target/KVX/KVXGenRegisterInfo.inc",
+            ),
+            (
+                ["-gen-subtarget"],
+                "lib/Target/KVX/KVXGenSubtargetInfo.inc",
             ),
         ],
     },

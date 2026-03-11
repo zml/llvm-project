@@ -12,6 +12,7 @@ DEFAULT_TARGETS = [
     "AVR",
     "BPF",
     "Hexagon",
+    "KVX",
     "Lanai",
     "LoongArch",
     "Mips",
