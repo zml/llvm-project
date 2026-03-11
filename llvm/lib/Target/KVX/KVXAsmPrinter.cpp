@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "KVXAsmPrinter.h"
-#include "InstPrinter/KVXInstPrinter.h"
+#include "MCTargetDesc/KVXInstPrinter.h"
 #include "KVXGenMCPseudoLowering.inc"
 #include "MCTargetDesc/KVXAsmInfo.h"
 #include "llvm/CodeGen/TargetSubtargetInfo.h"

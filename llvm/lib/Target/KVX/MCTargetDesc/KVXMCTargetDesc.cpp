@@ -12,7 +12,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "KVXMCTargetDesc.h"
-#include "InstPrinter/KVXInstPrinter.h"
+#include "KVXInstPrinter.h"
 #include "KVXAsmInfo.h"
 #include "KVXTargetStreamer.h"
 #include "llvm/MC/MCAsmInfo.h"

@@ -4,7 +4,10 @@
 
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
 load("@bazel_skylib//rules:expand_template.bzl", "expand_template")
+load("@rules_cc//cc:cc_binary.bzl", "cc_binary")
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 load("@rules_python//python:defs.bzl", "py_binary")
+load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 load("//mlir:tblgen.bzl", "gentbl_cc_library", "gentbl_filegroup", "td_library")
 load(":binary_alias.bzl", "binary_alias")
 load(":config.bzl", "llvm_config_defines")
@@ -548,8 +551,10 @@ cc_library(
 
 cc_library(
     name = "DWARFCFIChecker",
-    srcs = glob(["lib/DWARFCFIChecker/*.cpp",
-                 "lib/DWARFCFIChecker/*.h",]),
+    srcs = glob([
+        "lib/DWARFCFIChecker/*.cpp",
+        "lib/DWARFCFIChecker/*.h",
+    ]),
     hdrs = glob(["include/llvm/DWARFCFIChecker/*.h"]),
     copts = llvm_copts,
     deps = [
@@ -839,6 +844,10 @@ llvm_target_intrinsics_list = [
     {
         "name": "LoongArch",
         "intrinsic_prefix": "loongarch",
+    },
+    {
+        "name": "KVX",
+        "intrinsic_prefix": "kvx",
     },
     {
         "name": "Mips",
@@ -1415,6 +1424,13 @@ td_library(
     name = "RISCVTargetTdFiles",
     srcs = glob([
         "lib/Target/RISCV/**/*.td",
+    ]),
+)
+
+td_library(
+    name = "KVXTargetTdFiles",
+    srcs = glob([
+        "lib/Target/KVX/**/*.td",
     ]),
 )
 
@@ -2343,6 +2359,21 @@ llvm_target_lib_list = [lib for lib in [
             "lib/Target/LoongArch/LoongArchGenMCPseudoLowering.inc": ["-gen-pseudo-lowering"],
             "lib/Target/LoongArch/LoongArchGenRegisterInfo.inc": ["-gen-register-info"],
             "lib/Target/LoongArch/LoongArchGenSubtargetInfo.inc": ["-gen-subtarget"],
+        },
+    },
+    {
+        "name": "KVX",
+        "short_name": "KVX",
+        "tbl_outs": {
+            "lib/Target/KVX/KVXGenAsmMatcher.inc": ["-gen-asm-matcher"],
+            "lib/Target/KVX/KVXGenAsmWriter.inc": ["-gen-asm-writer"],
+            "lib/Target/KVX/KVXGenCallingConv.inc": ["-gen-callingconv"],
+            "lib/Target/KVX/KVXGenDAGISel.inc": ["-gen-dag-isel"],
+            "lib/Target/KVX/KVXGenDFAPacketizer.inc": ["-gen-dfa-packetizer"],
+            "lib/Target/KVX/KVXGenInstrInfo.inc": ["-gen-instr-info"],
+            "lib/Target/KVX/KVXGenMCPseudoLowering.inc": ["-gen-pseudo-lowering"],
+            "lib/Target/KVX/KVXGenRegisterInfo.inc": ["-gen-register-info"],
+            "lib/Target/KVX/KVXGenSubtargetInfo.inc": ["-gen-subtarget"],
         },
     },
     {
