@@ -308,7 +308,7 @@ cc_library(
             "-lm",
         ],
         "@platforms//os:macos": [
-            "-pthread",
+            # "-pthread",
             "-ldl",
         ],
         "//conditions:default": [
