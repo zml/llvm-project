@@ -198,7 +198,8 @@ void KVXAsmPrinter::emitDebugValue(const MCExpr *Value, unsigned Size) const {
 }
 
 void KVXAsmPrinter::emitInlineAsmEnd(const MCSubtargetInfo &StartInfo,
-                                     const MCSubtargetInfo *EndInfo) const {
+                                     const MCSubtargetInfo *EndInfo,
+                                     const MachineInstr *MI) {
   OutStreamer->emitRawText(StringRef("\t;;\n"));
 }
 

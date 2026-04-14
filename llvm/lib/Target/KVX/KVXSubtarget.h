@@ -32,8 +32,8 @@ class KVXSubtarget : public KVXGenSubtargetInfo {
 
   CodeGenOptLevel OptLevel;
   KVXFrameLowering FrameLowering;
-  KVXInstrInfo InstrInfo;
   KVXRegisterInfo RegInfo;
+  KVXInstrInfo InstrInfo;
   KVXTargetLowering TLInfo;
   SelectionDAGTargetInfo TSInfo;
   InstrItineraryData InstrItins;
@@ -67,7 +67,7 @@ public:
   }
 
   void overrideSchedPolicy(MachineSchedPolicy &Policy,
-                           unsigned NumRegionInstrs) const override;
+                           const SchedRegion &Region) const override;
 
   bool enableSubRegLiveness() const override;
   bool enableMachineSchedDefaultSched() const override;

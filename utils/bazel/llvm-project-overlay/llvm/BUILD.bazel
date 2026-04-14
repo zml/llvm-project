@@ -2731,7 +2731,13 @@ llvm_target_lib_list = [lib for lib in [
             ),
             (
                 ["-gen-register-info"],
-                "lib/Target/KVX/KVXGenRegisterInfo.inc",
+                [
+                    "lib/Target/KVX/KVXGenRegisterInfo.inc",
+                    "lib/Target/KVX/KVXGenRegisterInfoEnums.inc",
+                    "lib/Target/KVX/KVXGenRegisterInfoMCDesc.inc",
+                    "lib/Target/KVX/KVXGenRegisterInfoHeader.inc",
+                    "lib/Target/KVX/KVXGenRegisterInfoTargetDesc.inc",
+                ],
             ),
             (
                 ["-gen-subtarget"],
@@ -3653,7 +3659,10 @@ gentbl_cc_library(
     [cc_library(
         name = target["name"] + "Info",
         srcs = ["lib/Target/" + target["name"] + "/TargetInfo/" + target["name"] + "TargetInfo.cpp"],
-        hdrs = glob(["lib/Target/" + target["name"] + "/TargetInfo/*.h"]),
+        hdrs = glob(
+            ["lib/Target/" + target["name"] + "/TargetInfo/*.h"],
+            allow_empty = True,
+        ),
         copts = llvm_copts,
         # Workaround for https://github.com/bazelbuild/bazel/issues/3828
         # TODO(gcmn): Remove this when upgrading to a Bazel version containing

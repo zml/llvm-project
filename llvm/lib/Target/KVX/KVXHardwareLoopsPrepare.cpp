@@ -80,7 +80,8 @@ bool KVXHardwareLoopsPrepare::runOnFunction(Function &F) {
         report_fatal_error("Unexpected instruction, should be a branch.");
 
       Function *DecFunc =
-          Intrinsic::getDeclaration(F.getParent(), Intrinsic::kvx_loopdoexit);
+          Intrinsic::getOrInsertDeclaration(F.getParent(),
+                                            Intrinsic::kvx_loopdoexit);
 
       IRBuilder<> Builder(&CI);
       auto *R = Builder.CreateCall(DecFunc);

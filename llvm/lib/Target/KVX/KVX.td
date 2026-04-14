@@ -124,6 +124,8 @@ def KVXAsmParser : AsmParser {
 def KVXAsmWriter : AsmWriter {
 }
 
+defm : RemapAllTargetPseudoPointerOperands<SingleReg>;
+
 def KVX : Target {
     let InstructionSet = KVXInstrInfo;
 

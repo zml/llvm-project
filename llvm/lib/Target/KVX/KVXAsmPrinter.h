@@ -36,7 +36,8 @@ public:
   void emitDebugValue(const MCExpr *Value, unsigned Size) const override;
 
   void emitInlineAsmEnd(const MCSubtargetInfo &StartInfo,
-                        const MCSubtargetInfo *EndInfo) const override;
+                        const MCSubtargetInfo *EndInfo,
+                        const MachineInstr *MI) override;
 
   bool runOnMachineFunction(MachineFunction &MF) override;
 

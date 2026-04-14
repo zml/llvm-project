@@ -443,7 +443,7 @@ static void CC_KVX_PromoteIntToABICarrier(unsigned ValNo, MVT ValVT,
 
 static bool CC_SRET_KVX(unsigned ValNo, MVT ValVT, MVT LocVT,
                         CCValAssign::LocInfo LocInfo, ISD::ArgFlagsTy ArgFlags,
-                        CCState &State) {
+                        Type *OrigTy, CCState &State) {
   if (ArgFlags.isSRet()) {
     if (unsigned Reg = State.AllocateReg(KVX::R15)) {
       State.addLoc(CCValAssign::getReg(ValNo, ValVT, Reg, LocVT, LocInfo));
@@ -453,23 +453,22 @@ static bool CC_SRET_KVX(unsigned ValNo, MVT ValVT, MVT LocVT,
   }
 
   CC_KVX_PromoteIntToABICarrier(ValNo, ValVT, LocVT, LocInfo, ArgFlags);
-  return CC_KVX(ValNo, (LocVT != ValVT) ? LocVT : ValVT, LocVT, LocInfo, ArgFlags,
-                State);
+  return CC_KVX(ValNo, (LocVT != ValVT) ? LocVT : ValVT, LocVT, LocInfo,
+                ArgFlags, OrigTy, State);
 }
 
 static bool RetCC_KVX_Promoted(unsigned ValNo, MVT ValVT,
-                                               MVT LocVT,
-                                               CCValAssign::LocInfo LocInfo,
-                                               ISD::ArgFlagsTy ArgFlags,
-                                               CCState &State) {
+                               MVT LocVT, CCValAssign::LocInfo LocInfo,
+                               ISD::ArgFlagsTy ArgFlags, Type *OrigTy,
+                               CCState &State) {
   CC_KVX_PromoteIntToABICarrier(ValNo, ValVT, LocVT, LocInfo, ArgFlags);
   return RetCC_KVX(ValNo, (LocVT != ValVT) ? LocVT : ValVT, LocVT, LocInfo,
-                   ArgFlags, State);
+                   ArgFlags, OrigTy, State);
 }
 
 KVXTargetLowering::KVXTargetLowering(const TargetMachine &TM,
                                      const KVXSubtarget &STI)
-    : TargetLowering(TM), Subtarget(STI) {
+    : TargetLowering(TM, STI), Subtarget(STI) {
   setBooleanContents(ZeroOrOneBooleanContent);
 
   setBooleanVectorContents(ZeroOrNegativeOneBooleanContent);
@@ -529,10 +528,10 @@ KVXTargetLowering::KVXTargetLowering(const TargetMachine &TM,
                    ISD::UREM})
       setOperationAction(I, VT, LibCall);
 
-  setLibcallImpl(RTLIB::SDIVREM_I32, RTLIB::__divmodsi4);
-  setLibcallImpl(RTLIB::UDIVREM_I32, RTLIB::__udivmodsi4);
-  setLibcallImpl(RTLIB::SDIVREM_I64, RTLIB::__divmoddi4);
-  setLibcallImpl(RTLIB::UDIVREM_I64, RTLIB::__udivmoddi4);
+  setLibcallImpl(RTLIB::SDIVREM_I32, RTLIB::impl___divmodsi4);
+  setLibcallImpl(RTLIB::UDIVREM_I32, RTLIB::impl___udivmodsi4);
+  setLibcallImpl(RTLIB::SDIVREM_I64, RTLIB::impl___divmoddi4);
+  setLibcallImpl(RTLIB::UDIVREM_I64, RTLIB::impl___udivmoddi4);
 
   setOperationAction(ISD::MULHU, MVT::v4i16, Custom);
   setOperationAction(ISD::MULHS, MVT::v4i16, Custom);
@@ -1038,7 +1037,7 @@ KVXTargetLowering::KVXTargetLowering(const TargetMachine &TM,
                  ISD::ZERO_EXTEND})
     setTargetDAGCombine(I);
 
-  setLibcallImpl(RTLIB::UNWIND_RESUME, RTLIB::_Unwind_SjLj_Resume);
+  setLibcallImpl(RTLIB::UNWIND_RESUME, RTLIB::impl__Unwind_SjLj_Resume);
 }
 
 EVT KVXTargetLowering::getSetCCResultType(const DataLayout &DL, LLVMContext &C,
@@ -4145,7 +4144,7 @@ static SDValue combineFDIV(SDNode *N, SelectionDAG &Dag,
   auto DL = SDLoc(N);
   auto ToTy = EVT(MVT::f32);
   if (Ty.isVector())
-    ToTy = Ty.changeVectorElementType(ToTy);
+    ToTy = Ty.changeVectorElementType(*Dag.getContext(), ToTy);
 
   auto Op0 = Dag.getFPExtendOrRound(N->getOperand(0), DL, ToTy);
   auto Op1 = Dag.getFPExtendOrRound(N->getOperand(1), DL, ToTy);
@@ -5621,12 +5620,11 @@ SDValue KVXTargetLowering::expandVecLibCall(const LibCalls &Names,
 
   const StringRef LC = Name->second;
   TargetLowering::ArgListTy Args;
-  TargetLowering::ArgListEntry Entry;
 
   for (const SDValue &Op : Node->op_values()) {
     EVT ArgVT = Op.getValueType();
     Type *ArgTy = ArgVT.getTypeForEVT(*DAG.getContext());
-    Entry.Node = Op;
+    TargetLowering::ArgListEntry Entry(Op, ArgTy);
     Entry.Ty = ArgTy;
     Entry.IsSExt = shouldSignExtendTypeInLibCall(ArgTy, IsSigned);
     Entry.IsZExt = !shouldSignExtendTypeInLibCall(ArgTy, IsSigned);

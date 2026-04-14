@@ -42,14 +42,16 @@ KVXSubtarget &KVXSubtarget::initializeSubtargetDependencies(StringRef CPU,
 KVXSubtarget::KVXSubtarget(const Triple &TT, StringRef CPU,
                            const std::string &FS, const TargetMachine &TM)
     : KVXGenSubtargetInfo(TT, CPU, /* TuneCPU */ CPU, FS),
-      OptLevel(TM.getOptLevel()), FrameLowering(*this), InstrInfo(initializeSubtargetDependencies(CPU, FS)),
-      RegInfo(getHwMode()), TLInfo(TM, *this),
+      OptLevel(TM.getOptLevel()), FrameLowering(*this),
+      RegInfo((initializeSubtargetDependencies(CPU, FS), getHwMode())),
+      InstrInfo(*this), TLInfo(TM, *this),
       InstrItins(getInstrItineraryForCPU(KVX_MC::selectKVXCPU(CPU))) {
   assert(InstrItins.Itineraries != nullptr && "InstrItins not initialized");
 }
 
 void KVXSubtarget::overrideSchedPolicy(MachineSchedPolicy &Policy,
-                                       unsigned NumRegionInstrs) const {
+                                       const SchedRegion &Region) const {
+  (void)Region;
   // Enable bidirectional scheduling
   Policy.OnlyTopDown = false;
   Policy.OnlyBottomUp = false;

@@ -74,7 +74,7 @@ public:
   void loadRegFromStackSlot(MachineBasicBlock &MBB,
                             MachineBasicBlock::iterator MI, Register DestReg,
                             int FrameIndex, const TargetRegisterClass *RC,
-                            const TargetRegisterInfo *TRI, Register VReg,
+                            Register VReg, unsigned SubReg = 0,
                             MachineInstr::MIFlag Flags =
                                 MachineInstr::NoFlags) const override;
 
@@ -87,10 +87,17 @@ public:
   void storeRegToStackSlot(MachineBasicBlock &MBB,
                            MachineBasicBlock::iterator MI, Register SrcReg,
                            bool isKill, int FrameIndex,
+                           const TargetRegisterClass *RC, Register VReg,
+                           MachineInstr::MIFlag Flags =
+                               MachineInstr::NoFlags) const override;
+
+  void storeRegToStackSlot(MachineBasicBlock &MBB,
+                           MachineBasicBlock::iterator MI, Register SrcReg,
+                           bool isKill, int FrameIndex,
                            const TargetRegisterClass *RC,
                            const TargetRegisterInfo *TRI, Register VReg,
                            MachineInstr::MIFlag Flags =
-                               MachineInstr::NoFlags) const override;
+                               MachineInstr::NoFlags) const;
 
   DFAPacketizer *CreateTargetScheduleState(const TargetSubtargetInfo &STI) const
       override;

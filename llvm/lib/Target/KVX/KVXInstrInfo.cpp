@@ -27,7 +27,8 @@ static cl::opt<bool> KVXCondTailCall(
     cl::init(false), cl::cat(KVXclOpts));
 
 KVXInstrInfo::KVXInstrInfo(KVXSubtarget &ST)
-    : KVXGenInstrInfo(KVX::ADJCALLSTACKDOWN, KVX::ADJCALLSTACKUP),
+    : KVXGenInstrInfo(ST, *ST.getRegisterInfo(), KVX::ADJCALLSTACKDOWN,
+                      KVX::ADJCALLSTACKUP),
       Subtarget(ST) {}
 
 void KVXInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
@@ -327,9 +328,12 @@ void KVXInstrInfo::loadRegFromStackSlot(MachineBasicBlock &MBB,
                                         MachineBasicBlock::iterator I,
                                         Register DstReg, int FI,
                                         const TargetRegisterClass *RC,
-                                        const TargetRegisterInfo *TRI,
-                                        Register VReg,
+                                        Register VReg, unsigned SubReg,
                                         MachineInstr::MIFlag Flags) const {
+  const TargetRegisterInfo *TRI = Subtarget.getRegisterInfo();
+  (void)VReg;
+  if (SubReg)
+    report_fatal_error("KVX does not support partial stack-slot reloads.");
   (void)Flags;
   return loadRegFromStackSlot(MBB, I, DstReg, FI, RC, TRI, VReg, false,
                               DebugLoc());
@@ -435,6 +439,17 @@ void KVXInstrInfo::loadRegFromStackSlot(
               .addCFIIndex(CFIIndex)
               .setMIFlag(MachineInstr::FrameDestroy);
   }
+}
+
+void KVXInstrInfo::storeRegToStackSlot(MachineBasicBlock &MBB,
+                                       MachineBasicBlock::iterator I,
+                                       Register SrcReg, bool IsKill, int FI,
+                                       const TargetRegisterClass *RC,
+                                       Register VReg,
+                                       MachineInstr::MIFlag Flags) const {
+  const TargetRegisterInfo *TRI = Subtarget.getRegisterInfo();
+  return storeRegToStackSlot(MBB, I, SrcReg, IsKill, FI, RC, TRI, VReg,
+                             Flags);
 }
 
 void KVXInstrInfo::storeRegToStackSlot(MachineBasicBlock &MBB,
