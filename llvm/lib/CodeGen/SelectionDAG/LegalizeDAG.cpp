@@ -3008,9 +3008,11 @@ void SelectionDAGLegalize::PromoteLegalINT_TO_FP(
   while (true) {
     if (!NewInTy.isVector())
       NewInTy = (MVT::SimpleValueType)(NewInTy.getSimpleVT().SimpleTy + 1);
-    else
-      NewInTy = NewInTy.changeVectorElementType((MVT::SimpleValueType)(
-          NewInTy.getVectorElementType().getSimpleVT().SimpleTy + 1));
+    else {
+      MVT NewEltTy = (MVT::SimpleValueType)(
+          NewInTy.getVectorElementType().getSimpleVT().SimpleTy + 1);
+      NewInTy = NewInTy.changeVectorElementType(*DAG.getContext(), NewEltTy);
+    }
 
     assert(NewInTy.isInteger() && "Ran out of possibilities!");
 
@@ -3071,9 +3073,12 @@ void SelectionDAGLegalize::PromoteLegalFP_TO_INT(SDNode *N, const SDLoc &dl,
   while (true) {
     if (!NewOutTy.isVector())
       NewOutTy = (MVT::SimpleValueType)(NewOutTy.getSimpleVT().SimpleTy + 1);
-    else
-      NewOutTy = NewOutTy.changeVectorElementType((MVT::SimpleValueType)(
-          NewOutTy.getVectorElementType().getSimpleVT().SimpleTy + 1));
+    else {
+      MVT NewEltTy = (MVT::SimpleValueType)(
+          NewOutTy.getVectorElementType().getSimpleVT().SimpleTy + 1);
+      NewOutTy =
+          NewOutTy.changeVectorElementType(*DAG.getContext(), NewEltTy);
+    }
 
     assert(NewOutTy.isInteger() && "Ran out of possibilities!");
 

@@ -736,7 +736,6 @@ static Triple::OSType parseOS(StringRef OSName) {
       .StartsWith("zos", Triple::ZOS)
       .StartsWith("haiku", Triple::Haiku)
       .StartsWith("rtems", Triple::RTEMS)
-      .StartsWith("nacl", Triple::NaCl)
       .StartsWith("aix", Triple::AIX)
       .StartsWith("cuda", Triple::CUDA)
       .StartsWith("nvcl", Triple::NVCL)
