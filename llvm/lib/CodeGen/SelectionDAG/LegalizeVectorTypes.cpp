@@ -1216,7 +1216,10 @@ void DAGTypeLegalizer::SplitVectorResult(SDNode *N, unsigned ResNo) {
     SplitVecRes_LOOP_DEPENDENCE_MASK(N, Lo, Hi);
     break;
   case ISD::MERGE_VALUES: SplitRes_MERGE_VALUES(N, ResNo, Lo, Hi); break;
-  case ISD::AssertZext:   SplitVecRes_AssertZext(N, Lo, Hi); break;
+  case ISD::AssertSext:
+  case ISD::AssertZext:
+    SplitVecRes_AssertSZext(N, Lo, Hi);
+    break;
   case ISD::VSELECT:
   case ISD::SELECT:
   case ISD::VP_MERGE:

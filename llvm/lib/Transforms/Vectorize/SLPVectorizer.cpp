@@ -15697,6 +15697,20 @@ BoUpSLP::getEntryCost(const TreeEntry *E, ArrayRef<Value *> VectorizedVals,
         VecCost +=
             TTIRef.getCastInstrCost(E->getAltOpcode(), VecTy, SrcTy,
                                     TTI::CastContextHint::None, CostKind);
+        //NOTE(cerisier): Can't resolve conflict...
+        // Type *Src0SclTy = E->getMainOp()->getOperand(0)->getType();
+        // Type *Src1SclTy = E->getAltOp()->getOperand(0)->getType();
+        // auto *Src0Ty = FixedVectorType::get(Src0SclTy, VL.size());
+        // auto *Src1Ty = FixedVectorType::get(Src1SclTy, VL.size());
+        // VecCost = 0;
+        // if (VecTy != Src0Ty)
+        //   VecCost = TTIRef.getCastInstrCost(E->getOpcode(), VecTy, Src0Ty,
+        //                                     TTI::CastContextHint::None, CostKind);
+
+        // if (VecTy != Src1Ty)
+        //   VecCost +=
+        //     TTIRef.getCastInstrCost(E->getAltOpcode(), VecTy, Src1Ty,
+        //                            TTI::CastContextHint::None, CostKind);
       }
       SmallVector<int> Mask;
       E->buildAltOpShuffleMask(

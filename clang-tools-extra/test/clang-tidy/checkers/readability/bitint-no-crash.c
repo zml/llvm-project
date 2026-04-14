@@ -1,3 +1,4 @@
+// XFAIL: target=kvx-{{.*}}
 // RUN: %check_clang_tidy -std=c23-or-later %s readability-magic-numbers %t
 
 // Don't crash

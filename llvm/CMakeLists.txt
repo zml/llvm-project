@@ -533,6 +533,7 @@ set(LLVM_ALL_TARGETS
   SPIRV
   SystemZ
   VE
+  KVX
   WebAssembly
   X86
   XCore

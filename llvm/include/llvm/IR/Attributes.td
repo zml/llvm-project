@@ -153,6 +153,9 @@ def InlineHint : EnumAttr<"inlinehint", IntersectAnd, [FnAttr]>;
 /// Force argument to be passed in register.
 def InReg : EnumAttr<"inreg", IntersectPreserve, [ParamAttr, RetAttr]>;
 
+/// KVX-GCC function.
+def MPPANative : EnumAttr<"mppa_native", IntersectPreserve, [FnAttr]>;
+
 /// Build jump-instruction tables and replace refs.
 def JumpTable : EnumAttr<"jumptable", IntersectPreserve, [FnAttr]>;
 
