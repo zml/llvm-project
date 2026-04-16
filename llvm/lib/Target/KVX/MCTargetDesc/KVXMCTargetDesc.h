@@ -14,6 +14,7 @@
 #ifndef LLVM_LIB_TARGET_KVX_MCTARGETDESC_KVXMCTARGETDESC_H
 #define LLVM_LIB_TARGET_KVX_MCTARGETDESC_KVXMCTARGETDESC_H
 
+#include "llvm/lib/Target/KVX/TargetInfo/KVXTargetInfo.h"
 #include "llvm/Support/DataTypes.h"
 
 #include <memory>
@@ -33,8 +34,6 @@ class StringRef;
 namespace KVX_MC {
 StringRef selectKVXCPU(StringRef CPU);
 }
-
-Target &getTheKVXTarget();
 
 MCCodeEmitter *createKVXMCCodeEmitter(const MCInstrInfo &MCII, MCContext &Ctx);
 std::unique_ptr<MCObjectTargetWriter> createKVXELFObjectWriter(bool Is64Bit,
