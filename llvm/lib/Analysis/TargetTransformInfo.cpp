@@ -361,6 +361,9 @@ bool TargetTransformInfo::isHardwareLoopProfitable(
     TargetLibraryInfo *LibInfo, HardwareLoopInfo &HWLoopInfo) const {
   return TTIImpl->isHardwareLoopProfitable(L, SE, AC, LibInfo, HWLoopInfo);
 }
+bool TargetTransformInfo::shouldAddRemainderMetaData() {
+  return TTIImpl->shouldAddRemainderMetaData();
+}
 
 unsigned TargetTransformInfo::getEpilogueVectorizationMinVF() const {
   return TTIImpl->getEpilogueVectorizationMinVF();

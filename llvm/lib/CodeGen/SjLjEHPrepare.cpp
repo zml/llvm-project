@@ -451,6 +451,10 @@ bool SjLjEHPrepareImpl::setupEntryBlockAndCallSites(Function &F) {
     CallInst::Create(CallSiteFn, CallSiteNum, "", Invokes[I]->getIterator());
   }
 
+  // Set of invokes that are not skipped.
+  SmallSetVector<const Instruction *, 8> InvokesSet;
+  for (auto &I : Invokes)
+    InvokesSet.insert(I);
   // Mark call instructions that aren't nounwind as no-action (call_site ==
   // -1). Skip the entry block, as prior to then, no function context has been
   // created for this function and any unexpected exceptions thrown will go
@@ -459,9 +463,13 @@ bool SjLjEHPrepareImpl::setupEntryBlockAndCallSites(Function &F) {
   for (BasicBlock &BB : F) {
     if (&BB == &F.front())
       continue;
-    for (Instruction &I : BB)
+    for (Instruction &I : BB) {
       if (!isa<InvokeInst>(I) && I.mayThrow())
         insertCallSiteStore(&I, -1);
+      // NOTE(cerisier): Not sure what to do else....
+      if (I.mayThrow() && !InvokesSet.count(&I))
+        insertCallSiteStore(&I, -1);
+    }
   }
 
   // Following any allocas not in the entry block, update the saved SP in the

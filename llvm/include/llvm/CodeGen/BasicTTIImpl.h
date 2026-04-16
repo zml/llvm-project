@@ -773,6 +773,10 @@ public:
     return BaseT::getEpilogueVectorizationMinVF();
   }
 
+  bool shouldAddRemainderMetaData() const override {
+    return BaseT::shouldAddRemainderMetaData();
+  }
+
   bool preferPredicateOverEpilogue(TailFoldingInfo *TFI) const override {
     return BaseT::preferPredicateOverEpilogue(TFI);
   }

@@ -598,7 +598,8 @@ bool AsmPrinter::doInitialization(Module &M) {
         break;
     }
     assert(MAI->getExceptionHandlingType() == ExceptionHandling::DwarfCFI ||
-           usesCFIWithoutEH() || ModuleCFISection != CFISection::EH);
+           usesCFIWithoutEH() || ModuleCFISection != CFISection::EH ||
+           (MAI->usesCFIForDebug() && ModuleCFISection == CFISection::Debug));
     break;
   default:
     break;
@@ -1150,17 +1151,17 @@ void AsmPrinter::emitImplicitDef(const MachineInstr *MI) const {
   OutStreamer->addBlankLine();
 }
 
-static void emitKill(const MachineInstr *MI, AsmPrinter &AP) {
+void AsmPrinter::emitKill(const MachineInstr *MI) const {
   std::string Str;
   raw_string_ostream OS(Str);
   OS << "kill:";
   for (const MachineOperand &Op : MI->operands()) {
     assert(Op.isReg() && "KILL instruction must have only register operands");
     OS << ' ' << (Op.isDef() ? "def " : "killed ")
-       << printReg(Op.getReg(), AP.MF->getSubtarget().getRegisterInfo());
+       << printReg(Op.getReg(), MF->getSubtarget().getRegisterInfo());
   }
-  AP.OutStreamer->AddComment(Str);
-  AP.OutStreamer->addBlankLine();
+  OutStreamer->AddComment(Str);
+  OutStreamer->addBlankLine();
 }
 
 static void emitFakeUse(const MachineInstr *MI, AsmPrinter &AP) {
@@ -1344,13 +1345,16 @@ bool AsmPrinter::usesCFIWithoutEH() const {
 
 void AsmPrinter::emitCFIInstruction(const MachineInstr &MI) {
   ExceptionHandling ExceptionHandlingType = MAI->getExceptionHandlingType();
-  if (!usesCFIWithoutEH() &&
-      ExceptionHandlingType != ExceptionHandling::DwarfCFI &&
-      ExceptionHandlingType != ExceptionHandling::ARM)
+  const CFISection CFIS = getFunctionCFISectionType(*MF);
+  if (CFIS == CFISection::None)
     return;
 
-  if (getFunctionCFISectionType(*MF) == CFISection::None)
+  if (!usesCFIWithoutEH() &&
+      ExceptionHandlingType != ExceptionHandling::DwarfCFI &&
+      ExceptionHandlingType != ExceptionHandling::ARM &&
+      !(MAI->usesCFIForDebug() && CFIS == CFISection::Debug))
     return;
+
 
   // If there is no "real" instruction following this CFI instruction, skip
   // emitting it; it would be beyond the end of the function's FDE range.
@@ -1913,7 +1917,7 @@ void AsmPrinter::emitFunctionBody() {
         if (isVerbose()) emitImplicitDef(&MI);
         break;
       case TargetOpcode::KILL:
-        if (isVerbose()) emitKill(&MI, *this);
+        if (isVerbose()) emitKill(&MI);
         break;
       case TargetOpcode::FAKE_USE:
         if (isVerbose())

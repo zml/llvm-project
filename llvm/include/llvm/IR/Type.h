@@ -418,9 +418,15 @@ public:
   /// whilst keeping the old number of lanes.
   LLVM_ABI inline Type *getWithNewBitWidth(unsigned NewBitWidth) const;
 
-  /// Given scalar/vector integer type, returns a type with elements twice as
+  /// Given scalar/vector types, returns a type with elements twice as
   /// wide as in the original type. For vectors, preserves element count.
-  LLVM_ABI inline Type *getExtendedType() const;
+  /// The boolean defines that PPC128fp type is to be returned for 128bits.
+  LLVM_ABI inline Type *getExtendedType(const bool PPC128 = false) const;
+
+  /// Given scalar/vector types, returns a type with elements half as
+  /// wide as in the original type. For vectors, preserves element count.
+  /// The boolean defines that BFloat type is to be returned for 16bits.
+  LLVM_ABI inline Type *getTruncatedType(const bool BFloat = false) const;
 
   /// Get the address space of this pointer or pointer vector type.
   LLVM_ABI inline unsigned getPointerAddressSpace() const;

@@ -110,6 +110,9 @@ group("unittests") {
       "tools/llvm-exegesis/RISCV:LLVMExegesisRISCVTests",
     ]
   }
+  if (llvm_build_KVX) {
+    deps += [ "Target/KVX:KVXTests" ]
+  }
   if (llvm_build_SystemZ) {
     deps += [ "MC/SystemZ:SystemZAsmLexerTests" ]
   }

@@ -337,6 +337,7 @@ def IIT_V6 : IIT_Vec<6, 60>;
 def IIT_V10 : IIT_Vec<10, 61>;
 def IIT_V2048 : IIT_Vec<2048, 62>;
 def IIT_V4096 : IIT_Vec<4096, 63>;
+def IIT_DOUBLE_VEC : IIT_Base<64>;
 }
 
 defvar IIT_all_FixedTypes = !filter(iit, IIT_all,
@@ -482,6 +483,10 @@ class LLVMOneNthElementsVectorType<int idx, int n>
     n,
   ];
 }
+
+// Match the type of another intrinsic parameter and make double the
+// number of elements in the vector or make a vector of two elements.
+class LLVMDoubleElementsOfVecOrScalar<int num> : LLVMMatchType<num, IIT_DOUBLE_VEC>;
 
 // Match the type of another intrinsic parameter that is expected to be a
 // vector type (i.e. <N x iM>) but with each element subdivided to
@@ -2869,6 +2874,7 @@ include "llvm/IR/IntrinsicsWebAssembly.td"
 include "llvm/IR/IntrinsicsRISCV.td"
 include "llvm/IR/IntrinsicsSPIRV.td"
 include "llvm/IR/IntrinsicsVE.td"
+include "llvm/IR/IntrinsicsKVX.td"
 include "llvm/IR/IntrinsicsDirectX.td"
 include "llvm/IR/IntrinsicsLoongArch.td"
 

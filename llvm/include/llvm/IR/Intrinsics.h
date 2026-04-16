@@ -167,6 +167,7 @@ namespace Intrinsic {
       AMX,
       PPCQuad,
       AArch64Svcount,
+      DoubleVec,
     } Kind;
 
     union {
@@ -189,14 +190,16 @@ namespace Intrinsic {
       assert(Kind == Argument || Kind == ExtendArgument ||
              Kind == TruncArgument || Kind == SameVecWidthArgument ||
              Kind == VecElementArgument || Kind == Subdivide2Argument ||
-             Kind == Subdivide4Argument || Kind == VecOfBitcastsToInt);
+             Kind == Subdivide4Argument || Kind == VecOfBitcastsToInt ||
+             Kind == DoubleVec);
       return Argument_Info >> 3;
     }
     ArgKind getArgumentKind() const {
       assert(Kind == Argument || Kind == ExtendArgument ||
              Kind == TruncArgument || Kind == SameVecWidthArgument ||
              Kind == VecElementArgument || Kind == Subdivide2Argument ||
-             Kind == Subdivide4Argument || Kind == VecOfBitcastsToInt);
+             Kind == Subdivide4Argument || Kind == VecOfBitcastsToInt ||
+             Kind == DoubleVec);
       return (ArgKind)(Argument_Info & 7);
     }
 

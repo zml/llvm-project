@@ -3204,9 +3204,8 @@ bool CastInst::isBitOrNoopPointerCastable(Type *SrcTy, Type *DestTy,
 // should not assert in castIsValid. In other words, this produces a "correct"
 // casting opcode for the arguments passed to it.
 Instruction::CastOps
-CastInst::getCastOpcode(
-  const Value *Src, bool SrcIsSigned, Type *DestTy, bool DestIsSigned) {
-  Type *SrcTy = Src->getType();
+CastInst::getCastOpcode(Type *SrcTy, bool SrcIsSigned,
+                                             Type *DestTy, bool DestIsSigned) {
 
   assert(SrcTy->isFirstClassType() && DestTy->isFirstClassType() &&
          "Only first class types are castable!");

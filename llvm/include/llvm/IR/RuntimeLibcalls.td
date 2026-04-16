@@ -1431,6 +1431,8 @@ def __rt_udiv64 : RuntimeLibcallImpl<UDIVREM_I64>; // CallingConv::ARM_AAPCS
 // !(isTargetIOS() && isOSVersionLT(5, 0))
 def __divmodsi4 : RuntimeLibcallImpl<SDIVREM_I32>;
 def __udivmodsi4 : RuntimeLibcallImpl<UDIVREM_I32>;
+def __divmoddi4 : RuntimeLibcallImpl<SDIVREM_I64>;
+def __udivmoddi4 : RuntimeLibcallImpl<UDIVREM_I64>;
 
 // FIXME: Change calling convention of FPROUND_F32_F16,
 // RTLIB::FPROUND_F64_F16, FPEXT_F16_F32 for !Subtarget->isTargetWatchABI())

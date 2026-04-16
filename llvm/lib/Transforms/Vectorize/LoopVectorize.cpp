@@ -7096,11 +7096,11 @@ VectorizationFactor LoopVectorizationPlanner::computeBestVF() {
   return BestFactor;
 }
 
-static void addRuntimeUnrollDisableMetaData(Loop *L) {
+static void addMetaDataToRemainderLoops(Loop *L, const StringRef &Str) {
   SmallVector<Metadata *, 4> MDs;
   // Reserve first location for self reference to the LoopID metadata node.
   MDs.push_back(nullptr);
-  bool IsUnrollMetadata = false;
+  bool IsUnrollOrRemainderMetadata = false;
   MDNode *LoopID = L->getLoopID();
   if (LoopID) {
     // First find existing loop unrolling disable metadata.
@@ -7108,19 +7108,21 @@ static void addRuntimeUnrollDisableMetaData(Loop *L) {
       auto *MD = dyn_cast<MDNode>(LoopID->getOperand(I));
       if (MD) {
         const auto *S = dyn_cast<MDString>(MD->getOperand(0));
-        IsUnrollMetadata =
-            S && S->getString().starts_with("llvm.loop.unroll.disable");
+        IsUnrollOrRemainderMetadata =
+            S && S->getString().starts_with(Str);
       }
       MDs.push_back(LoopID->getOperand(I));
     }
   }
 
-  if (!IsUnrollMetadata) {
+  if (!IsUnrollOrRemainderMetadata) {
     // Add runtime unroll disable metadata.
     LLVMContext &Context = L->getHeader()->getContext();
     SmallVector<Metadata *, 1> DisableOperands;
-    DisableOperands.push_back(
-        MDString::get(Context, "llvm.loop.unroll.runtime.disable"));
+    const StringRef &Attribute = (Str == "llvm.loop.unroll.disable")
+                                     ? "llvm.loop.unroll.runtime.disable"
+                                     : Str;
+    DisableOperands.push_back(MDString::get(Context, Attribute));
     MDNode *DisableNode = MDNode::get(Context, DisableOperands);
     MDs.push_back(DisableNode);
     MDNode *NewLoopID = MDNode::get(Context, MDs);
@@ -7137,6 +7139,13 @@ static Value *getStartValueFromReductionResult(VPInstruction *RdxResult) {
   VPValue *StartVPV = RdxResult->getOperand(1);
   match(StartVPV, m_Freeze(m_VPValue(StartVPV)));
   return StartVPV->getLiveInIRValue();
+}
+
+static void AddRuntimeUnrollDisableMetaData(Loop *L) {
+  addMetaDataToRemainderLoops(L, "llvm.loop.unroll.disable");
+}
+static void AddRemainderMetaData(Loop *L) {
+  addMetaDataToRemainderLoops(L, "llvm.loop.remainder");
 }
 
 // If \p EpiResumePhiR is resume VPPhi for a reduction when vectorizing the
@@ -7386,7 +7395,7 @@ DenseMap<const SCEV *, Value *> LoopVectorizationPlanner::executePlan(
     TargetTransformInfo::UnrollingPreferences UP;
     TTI.getUnrollingPreferences(L, *PSE.getSE(), UP, ORE);
     if (!UP.UnrollVectorizedLoop || VectorizingEpilogue)
-      addRuntimeUnrollDisableMetaData(L);
+      AddRuntimeUnrollDisableMetaData(L);
   }
 
   // 3. Fix the vectorized code: take care of header phi's, live-outs,
@@ -10329,8 +10338,12 @@ bool LoopVectorizePass::processLoop(Loop *L) {
     L->setLoopID(*RemainderLoopID);
   } else {
     if (DisableRuntimeUnroll)
-      addRuntimeUnrollDisableMetaData(L);
-
+      AddRuntimeUnrollDisableMetaData(L);
+    // Only returns true for kvx
+    if (TTI->shouldAddRemainderMetaData()) {
+      // Flag scalar loop to prevent its conversion to a hardware loop
+      AddRemainderMetaData(L);
+    }
     // Mark the loop as already vectorized to avoid vectorizing again.
     Hints.setAlreadyVectorized();
   }

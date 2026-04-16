@@ -979,6 +979,7 @@ Function *CodeExtractor::constructFunctionDeclaration(
       case Attribute::VScaleRange:
       case Attribute::NoCfCheck:
       case Attribute::MustProgress:
+      case Attribute::MPPANative:
       case Attribute::NoProfile:
       case Attribute::SkipProfile:
         break;
