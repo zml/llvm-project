@@ -510,6 +510,34 @@ def : Pat<(i64 (KVX_vecreduce_add_zext v4i32:$v) ),
           (ADDDrr
             (ADDURWPD (v2i32 (EXTRACT_SUBREG PairedReg:$v, sub_d0))),
             (ADDURWPD (v2i32 (EXTRACT_SUBREG PairedReg:$v, sub_d1))))>;
+
+def : Pat<(i64 (KVX_vecreduce_add_sext v2i64:$v) ),
+          (ADDDrr
+            (i64 (EXTRACT_SUBREG PairedReg:$v, sub_d0)),
+            (i64 (EXTRACT_SUBREG PairedReg:$v, sub_d1)))>;
+
+def : Pat<(i64 (KVX_vecreduce_add_zext v2i64:$v) ),
+          (ADDDrr
+            (i64 (EXTRACT_SUBREG PairedReg:$v, sub_d0)),
+            (i64 (EXTRACT_SUBREG PairedReg:$v, sub_d1)))>;
+
+def : Pat<(i64 (KVX_vecreduce_add_sext v4i64:$v) ),
+          (ADDDrr
+            (ADDDrr
+              (i64 (EXTRACT_SUBREG QuadReg:$v, sub_d0)),
+              (i64 (EXTRACT_SUBREG QuadReg:$v, sub_d1))),
+            (ADDDrr
+              (i64 (EXTRACT_SUBREG QuadReg:$v, sub_d2)),
+              (i64 (EXTRACT_SUBREG QuadReg:$v, sub_d3))))>;
+
+def : Pat<(i64 (KVX_vecreduce_add_zext v4i64:$v) ),
+          (ADDDrr
+            (ADDDrr
+              (i64 (EXTRACT_SUBREG QuadReg:$v, sub_d0)),
+              (i64 (EXTRACT_SUBREG QuadReg:$v, sub_d1))),
+            (ADDDrr
+              (i64 (EXTRACT_SUBREG QuadReg:$v, sub_d2)),
+              (i64 (EXTRACT_SUBREG QuadReg:$v, sub_d3))))>;
 } // vt = i32, i64
 } // Predicates = [IsV2]
 
