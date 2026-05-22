@@ -54,6 +54,7 @@ public:
     aarch64,        // AArch64 (little endian): aarch64
     aarch64_be,     // AArch64 (big endian): aarch64_be
     aarch64_32,     // AArch64 (little endian) ILP32: aarch64_32
+    air64,          // AIR (64-bit): air64, air64_v.*
     arc,            // ARC: Synopsys ARC
     avr,            // AVR: Atmel AVR microcontroller
     bpfel,          // eBPF or extended BPF or 64-bit BPF (little endian)
@@ -151,6 +152,10 @@ public:
 
     AArch64SubArch_arm64e,
     AArch64SubArch_arm64ec,
+
+    // AIR sub-arch corresponds to the AIR version in Apple Metal triples.
+    AIRSubArch_v28,
+    LatestAIRSubArch = AIRSubArch_v28,
 
     KalimbaSubArch_v3,
     KalimbaSubArch_v4,
@@ -1016,6 +1021,9 @@ public:
     return getArch() == Triple::aarch64 || getArch() == Triple::aarch64_be ||
            getArch() == Triple::aarch64_32;
   }
+
+  /// Tests whether the target is AIR.
+  bool isAIR() const { return getArch() == Triple::air64; }
 
   /// Tests whether the target is AArch64 and pointers are the size specified by
   /// \p PointerWidth.

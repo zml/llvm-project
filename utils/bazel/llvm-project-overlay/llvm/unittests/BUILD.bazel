@@ -883,6 +883,18 @@ cc_test(
 )
 
 cc_test(
+    name = "triple_tests",
+    size = "small",
+    srcs = ["TargetParser/TripleTest.cpp"],
+    deps = [
+        "//llvm:Support",
+        "//llvm:TargetParser",
+        "//third-party/unittest:gtest",
+        "//third-party/unittest:gtest_main",
+    ],
+)
+
+cc_test(
     name = "llvm_exegesis_tests",
     size = "small",
     srcs = glob(

@@ -822,6 +822,10 @@ llvm_target_intrinsics_list = [
         "intrinsic_prefix": "aarch64",
     },
     {
+        "name": "AIR",
+        "intrinsic_prefix": "air",
+    },
+    {
         "name": "AMDGPU",
         "intrinsic_prefix": "amdgcn",
     },

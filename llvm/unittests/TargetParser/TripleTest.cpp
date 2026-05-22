@@ -278,6 +278,58 @@ TEST(TripleTest, ParsedIDs) {
   EXPECT_EQ(Triple::UnknownVendor, T.getVendor());
   EXPECT_EQ(Triple::UnknownOS, T.getOS());
 
+  T = Triple("air64-apple-macosx15.0.0");
+  EXPECT_EQ(Triple::air64, T.getArch());
+  EXPECT_EQ(Triple::NoSubArch, T.getSubArch());
+  EXPECT_EQ(Triple::Apple, T.getVendor());
+  EXPECT_EQ(Triple::MacOSX, T.getOS());
+  EXPECT_EQ("air64", T.getArchName());
+  EXPECT_TRUE(T.isAIR());
+  EXPECT_TRUE(T.isArch64Bit());
+  EXPECT_EQ("air", Triple::getArchTypePrefix(T.getArch()));
+  EXPECT_EQ(Triple::MachO, T.getObjectFormat());
+
+  T = Triple("air64_v28-apple-macosx26.0.0");
+  EXPECT_EQ(Triple::air64, T.getArch());
+  EXPECT_EQ(Triple::AIRSubArch_v28, T.getSubArch());
+  EXPECT_EQ(Triple::Apple, T.getVendor());
+  EXPECT_EQ(Triple::MacOSX, T.getOS());
+  EXPECT_EQ("air64_v28", T.getArchName());
+  EXPECT_EQ(Triple::MachO, T.getObjectFormat());
+
+  T = Triple("air64-apple-ios18.0.0");
+  EXPECT_EQ(Triple::air64, T.getArch());
+  EXPECT_EQ(Triple::NoSubArch, T.getSubArch());
+  EXPECT_EQ(Triple::Apple, T.getVendor());
+  EXPECT_EQ(Triple::IOS, T.getOS());
+  EXPECT_EQ(Triple::MachO, T.getObjectFormat());
+
+  T = Triple("air64_v28-apple-ios26.0.0");
+  EXPECT_EQ(Triple::air64, T.getArch());
+  EXPECT_EQ(Triple::AIRSubArch_v28, T.getSubArch());
+  EXPECT_EQ(Triple::Apple, T.getVendor());
+  EXPECT_EQ(Triple::IOS, T.getOS());
+  EXPECT_EQ(Triple::MachO, T.getObjectFormat());
+
+  T = Triple("air64_v28-apple-ios26.0.0-simulator");
+  EXPECT_EQ(Triple::air64, T.getArch());
+  EXPECT_EQ(Triple::AIRSubArch_v28, T.getSubArch());
+  EXPECT_EQ(Triple::Apple, T.getVendor());
+  EXPECT_EQ(Triple::IOS, T.getOS());
+  EXPECT_EQ(Triple::Simulator, T.getEnvironment());
+  EXPECT_EQ(Triple::MachO, T.getObjectFormat());
+
+  T = Triple("air64_v29-apple-macosx26.0.0");
+  EXPECT_EQ(Triple::air64, T.getArch());
+  EXPECT_EQ(Triple::NoSubArch, T.getSubArch());
+  EXPECT_EQ("air64_v29", T.getArchName());
+
+  EXPECT_EQ("air64", Triple::getArchTypeName(Triple::air64));
+  EXPECT_EQ("air64_v28",
+            Triple::getArchName(Triple::air64, Triple::AIRSubArch_v28));
+  EXPECT_EQ(Triple::air64, Triple::getArchTypeForLLVMName("air64"));
+  EXPECT_EQ(Triple::air64, Triple::getArchTypeForLLVMName("air64_v28"));
+
   T = Triple("spirv32-unknown-unknown");
   EXPECT_EQ(Triple::spirv32, T.getArch());
   EXPECT_EQ(Triple::NoSubArch, T.getSubArch());
@@ -1435,6 +1487,12 @@ TEST(TripleTest, Normalization) {
   EXPECT_EQ("unknown-unknown-linux", Triple::normalize("linux"));
 
   EXPECT_EQ("x86_64-unknown-linux-gnu", Triple::normalize("x86_64-gnu-linux"));
+  EXPECT_EQ("air64-apple-macosx15.0.0",
+            Triple::normalize("air64-apple-macosx15.0.0"));
+  EXPECT_EQ("air64_v28-apple-macosx26.0.0",
+            Triple::normalize("air64_v28-apple-macosx26.0.0"));
+  EXPECT_EQ("air64_v28-unknown-macosx26.0.0",
+            Triple::normalize("air64_v28-macosx26.0.0"));
 
   EXPECT_EQ("a-unknown-unknown",
             Triple::normalize("a", Triple::CanonicalForm::THREE_IDENT));
@@ -1812,6 +1870,12 @@ TEST(TripleTest, BitWidthChecks) {
   EXPECT_TRUE(T.isArch64Bit());
   EXPECT_TRUE(T.isSPIRV());
 
+  T.setArch(Triple::air64);
+  EXPECT_FALSE(T.isArch16Bit());
+  EXPECT_FALSE(T.isArch32Bit());
+  EXPECT_TRUE(T.isArch64Bit());
+  EXPECT_TRUE(T.isAIR());
+
   T.setArch(Triple::sparc);
   EXPECT_FALSE(T.isArch16Bit());
   EXPECT_TRUE(T.isArch32Bit());
@@ -2015,6 +2079,11 @@ TEST(TripleTest, BitWidthArchVariants) {
   T.setArch(Triple::spirv64);
   EXPECT_EQ(Triple::spirv32, T.get32BitArchVariant().getArch());
   EXPECT_EQ(Triple::spirv64, T.get64BitArchVariant().getArch());
+
+  T.setArch(Triple::air64, Triple::AIRSubArch_v28);
+  EXPECT_EQ(Triple::UnknownArch, T.get32BitArchVariant().getArch());
+  EXPECT_EQ(Triple::air64, T.get64BitArchVariant().getArch());
+  EXPECT_EQ(Triple::AIRSubArch_v28, T.get64BitArchVariant().getSubArch());
 
   T.setArch(Triple::wasm32);
   EXPECT_EQ(Triple::wasm32, T.get32BitArchVariant().getArch());
@@ -2244,6 +2313,11 @@ TEST(TripleTest, EndianArchVariants) {
   EXPECT_TRUE(T.isLittleEndian());
   EXPECT_EQ(Triple::UnknownArch, T.getBigEndianArchVariant().getArch());
   EXPECT_EQ(Triple::dxil, T.getLittleEndianArchVariant().getArch());
+
+  T.setArch(Triple::air64);
+  EXPECT_TRUE(T.isLittleEndian());
+  EXPECT_EQ(Triple::UnknownArch, T.getBigEndianArchVariant().getArch());
+  EXPECT_EQ(Triple::air64, T.getLittleEndianArchVariant().getArch());
 }
 
 TEST(TripleTest, XROS) {
@@ -2756,6 +2830,12 @@ TEST(TripleTest, FileFormat) {
   EXPECT_EQ(Triple::SPIRV, Triple("spirv32-apple-macosx").getObjectFormat());
   EXPECT_EQ(Triple::SPIRV, Triple("spirv64-apple-macosx").getObjectFormat());
   EXPECT_EQ(Triple::DXContainer, Triple("dxil-apple-macosx").getObjectFormat());
+  EXPECT_EQ(Triple::MachO,
+            Triple("air64-apple-macosx15.0.0").getObjectFormat());
+  EXPECT_EQ(Triple::MachO,
+            Triple("air64_v28-apple-macosx26.0.0").getObjectFormat());
+  EXPECT_EQ(Triple::MachO,
+            Triple("air64_v28-apple-ios26.0.0-simulator").getObjectFormat());
 }
 
 TEST(TripleTest, DefaultExceptionHandling) {
