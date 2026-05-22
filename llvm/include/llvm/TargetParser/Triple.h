@@ -154,6 +154,7 @@ public:
     AArch64SubArch_arm64ec,
 
     // AIR sub-arch corresponds to the AIR version in Apple Metal triples.
+    AIRSubArch_v27,
     AIRSubArch_v28,
     LatestAIRSubArch = AIRSubArch_v28,
 

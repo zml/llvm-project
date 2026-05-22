@@ -117,6 +117,8 @@ StringRef Triple::getArchName(ArchType Kind, SubArchType SubArch) {
       return "arm64e";
     break;
   case Triple::air64:
+    if (SubArch == AIRSubArch_v27)
+      return "air64_v27";
     if (SubArch == AIRSubArch_v28)
       return "air64_v28";
     break;
@@ -842,6 +844,7 @@ static Triple::SubArchType parseSubArch(StringRef SubArchName) {
 
   if (SubArchName.consume_front("air64_v"))
     return StringSwitch<Triple::SubArchType>(SubArchName)
+        .Case("27", Triple::AIRSubArch_v27)
         .Case("28", Triple::AIRSubArch_v28)
         .Default(Triple::NoSubArch);
 
