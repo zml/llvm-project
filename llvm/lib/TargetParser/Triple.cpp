@@ -32,6 +32,8 @@ StringRef Triple::getArchTypeName(ArchType Kind) {
     return "aarch64_32";
   case aarch64_be:
     return "aarch64_be";
+  case air64:
+    return "air64";
   case amdgcn:
     return "amdgcn";
   case amdil64:
@@ -181,6 +183,12 @@ StringRef Triple::getArchName(ArchType Kind, SubArchType SubArch) {
     if (SubArch == AArch64SubArch_lfi)
       return "aarch64_lfi";
     break;
+  case Triple::air64:
+    if (SubArch == AIRSubArch_v27)
+      return "air64_v27";
+    if (SubArch == AIRSubArch_v28)
+      return "air64_v28";
+    break;
   case Triple::spirv:
     switch (SubArch) {
     case Triple::SPIRVSubArch_v10:
@@ -243,6 +251,9 @@ StringRef Triple::getArchTypePrefix(ArchType Kind) {
   case aarch64_be:
   case aarch64_32:
     return "aarch64";
+
+  case air64:
+    return "air";
 
   case arc:
     return "arc";
@@ -654,8 +665,23 @@ static Triple::ArchType parseBPFArch(StringRef ArchName) {
   }
 }
 
+static bool isAIR64Arch(StringRef ArchName) {
+  if (ArchName == "air64")
+    return true;
+
+  if (!ArchName.consume_front("air64_v") || ArchName.empty())
+    return false;
+
+  for (char C : ArchName)
+    if (C < '0' || C > '9')
+      return false;
+  return true;
+}
+
 Triple::ArchType Triple::getArchTypeForLLVMName(StringRef Name) {
   Triple::ArchType BPFArch(parseBPFArch(Name));
+  if (isAIR64Arch(Name))
+    return air64;
   return StringSwitch<Triple::ArchType>(Name)
       .Case("aarch64", aarch64)
       .Case("aarch64_be", aarch64_be)
@@ -808,6 +834,7 @@ Triple::ArchType Triple::parseArch(StringRef ArchName) {
           .Case("aarch64", Triple::aarch64)
           .Case("aarch64_be", Triple::aarch64_be)
           .Case("aarch64_32", Triple::aarch64_32)
+          .Case("air64", Triple::air64)
           .Case("aarch64_lfi", Triple::aarch64)
           .Case("arc", Triple::arc)
           .Case("arm64", Triple::aarch64)
@@ -882,6 +909,8 @@ Triple::ArchType Triple::parseArch(StringRef ArchName) {
   // Some architectures require special parsing logic just to compute the
   // ArchType result.
   if (AT == Triple::UnknownArch) {
+    if (isAIR64Arch(ArchName))
+      return Triple::air64;
     if (ArchName.starts_with("arm") || ArchName.starts_with("thumb") ||
         ArchName.starts_with("aarch64"))
       return parseARMArch(ArchName);
@@ -1182,6 +1211,7 @@ static Triple::ObjectFormatType getDefaultFormat(const Triple &T) {
   case Triple::UnknownArch:
   case Triple::aarch64:
   case Triple::aarch64_32:
+  case Triple::air64:
   case Triple::arm:
   case Triple::thumb:
   case Triple::x86:
@@ -2006,6 +2036,7 @@ unsigned Triple::getArchPointerBitWidth(llvm::Triple::ArchType Arch) {
 
   case llvm::Triple::aarch64:
   case llvm::Triple::aarch64_be:
+  case llvm::Triple::air64:
   case llvm::Triple::amdgcn:
   case llvm::Triple::amdil64:
   case llvm::Triple::bpfeb:
@@ -2069,6 +2100,7 @@ Triple Triple::get32BitArchVariant() const {
   switch (getArch()) {
   case Triple::UnknownArch:
   case Triple::amdgcn:
+  case Triple::air64:
   case Triple::avr:
   case Triple::bpfeb:
   case Triple::bpfel:
@@ -2202,6 +2234,7 @@ Triple Triple::get64BitArchVariant() const {
 
   case Triple::aarch64:
   case Triple::aarch64_be:
+  case Triple::air64:
   case Triple::amdgcn:
   case Triple::amdil64:
   case Triple::bpfeb:
@@ -2306,6 +2339,7 @@ Triple Triple::getBigEndianArchVariant() const {
   switch (getArch()) {
   case Triple::UnknownArch:
   case Triple::amdgcn:
+  case Triple::air64:
   case Triple::amdil64:
   case Triple::amdil:
   case Triple::avr:
@@ -2440,6 +2474,7 @@ bool Triple::isLittleEndian() const {
   switch (getArch()) {
   case Triple::aarch64:
   case Triple::aarch64_32:
+  case Triple::air64:
   case Triple::amdgcn:
   case Triple::amdil64:
   case Triple::amdil:
