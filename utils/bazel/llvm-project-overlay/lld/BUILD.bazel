@@ -111,8 +111,6 @@ cc_library(
         "//llvm:TargetParser",
         "//llvm:TransformUtils",
         "//llvm:config",
-        "//third-party:zlib",
-        "//third-party:zstd",
     ],
 )
 

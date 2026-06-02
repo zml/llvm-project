@@ -18,6 +18,7 @@
 #include "llvm/Support/Compiler.h"
 #include <cassert>
 #include <climits>
+#include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <limits>

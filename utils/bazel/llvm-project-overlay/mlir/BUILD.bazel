@@ -36,6 +36,8 @@ exports_files([
     "utils/textmate/mlir.json",
 ])
 
+exports_files(["run_lit.sh"])
+
 filegroup(
     name = "gdb-scripts",
     srcs = glob(["utils/gdb-scripts/*"]),
